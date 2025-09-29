@@ -1,0 +1,150 @@
+replicaCount: 1
+
+image:
+  repository: node-optimizer
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: "node-optimizer"
+
+controller:
+  # Controller configuration
+  logLevel: info
+
+  # Default optimization config
+  defaultConfig:
+    # Mode: observe, manual, semi-auto, full-auto
+    mode: observe
+
+    # Safety threshold for semi-auto mode: conservative, medium, aggressive
+    safetyThreshold: conservative
+
+    # Namespaces to analyze (empty means all)
+    targetNamespaces: []
+
+    # Namespaces to exclude
+    excludeNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - node-optimizer
+
+    # Analysis schedule (cron format)
+    schedule: "*/30 * * * *"  # Every 30 minutes
+
+    # Bin packing strategy: first-fit, best-fit, network-aware, affinity-based
+    binPackingStrategy: best-fit
+
+    # Enable features
+    consolidationEnabled: true
+    rightSizingEnabled: true
+
+    # Safe migration windows
+    safeWindows:
+      - start: "02:00"
+        end: "05:00"
+        days: ["Mon", "Tue", "Wed", "Thu", "Fri"]
+      - start: "00:00"
+        end: "06:00"
+        days: ["Sat", "Sun"]
+
+# Notifications
+notifications:
+  slack:
+    enabled: false
+    webhook: ""
+    channel: "#ops-alerts"
+
+  email:
+    enabled: false
+    recipients: []
+
+# Resource limits for the controller pod
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    path: /metrics
+
+# Node selector for the controller pod
+nodeSelector: {}
+
+# Tolerations for the controller pod
+tolerations: []
+
+# Affinity for the controller pod
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - node-optimizer
+        topologyKey: kubernetes.io/hostname
+
+# RBAC configuration
+rbac:
+  create: true
+
+# Webhook configuration (for ValidatingWebhook)
+webhook:
+  enabled: false
+  port: 9443
+  certManager:
+    enabled: false
+
+# CLI tool installation
+cli:
+  enabled: true
+  installPath: /usr/local/bin
+
+# Dashboard (future feature)
+dashboard:
+  enabled: false
+  service:
+    type: ClusterIP
+    port: 8080
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: optimizer.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []

@@ -1,0 +1,295 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: optimizationconfigs.optimizer.io
+spec:
+  group: optimizer.io
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              mode:
+                type: string
+                enum: ["observe", "manual", "semi-auto", "full-auto"]
+                default: "observe"
+              safetyThreshold:
+                type: string
+                enum: ["conservative", "medium", "aggressive"]
+                default: "conservative"
+              targetNamespaces:
+                type: array
+                items:
+                  type: string
+              excludeNamespaces:
+                type: array
+                items:
+                  type: string
+                default: ["kube-system", "kube-public", "kube-node-lease"]
+              schedule:
+                type: string
+                default: "*/30 * * * *"  # Every 30 minutes
+              safeWindows:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    start:
+                      type: string
+                    end:
+                      type: string
+                    days:
+                      type: array
+                      items:
+                        type: string
+              notifications:
+                type: object
+                properties:
+                  slack:
+                    type: object
+                    properties:
+                      webhook:
+                        type: string
+                      channel:
+                        type: string
+                  email:
+                    type: array
+                    items:
+                      type: string
+              binPackingStrategy:
+                type: string
+                enum: ["first-fit", "best-fit", "network-aware", "affinity-based"]
+                default: "best-fit"
+              consolidationEnabled:
+                type: boolean
+                default: true
+              rightSizingEnabled:
+                type: boolean
+                default: true
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+                enum: ["Pending", "Running", "Analyzing", "Ready", "Error"]
+              lastAnalysis:
+                type: string
+              nodeCount:
+                type: integer
+              workloadCount:
+                type: integer
+              potentialSavings:
+                type: string
+              recommendations:
+                type: integer
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                    reason:
+                      type: string
+                    message:
+                      type: string
+  scope: Cluster
+  names:
+    plural: optimizationconfigs
+    singular: optimizationconfig
+    kind: OptimizationConfig
+    shortNames:
+    - optconfig
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: migrationplans.optimizer.io
+spec:
+  group: optimizer.io
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              migrations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    workload:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                        kind:
+                          type: string
+                    fromNode:
+                      type: string
+                    toNode:
+                      type: string
+                    risk:
+                      type: string
+                      enum: ["low", "medium", "high"]
+                    reason:
+                      type: string
+                    estimatedSavings:
+                      type: string
+                    scheduledFor:
+                      type: string
+              approved:
+                type: boolean
+                default: false
+              approvedBy:
+                type: string
+              approvalTime:
+                type: string
+              autoApprove:
+                type: boolean
+                default: false
+          status:
+            type: object
+            properties:
+              phase:
+                type: string
+                enum: ["Pending", "Approved", "Executing", "Completed", "Failed", "Cancelled"]
+              executedMigrations:
+                type: integer
+              totalMigrations:
+                type: integer
+              startTime:
+                type: string
+              completionTime:
+                type: string
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    workload:
+                      type: string
+                    status:
+                      type: string
+                    message:
+                      type: string
+                    timestamp:
+                      type: string
+  scope: Namespaced
+  names:
+    plural: migrationplans
+    singular: migrationplan
+    kind: MigrationPlan
+    shortNames:
+    - migplan
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: optimizationreports.optimizer.io
+spec:
+  group: optimizer.io
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              configRef:
+                type: string
+              timestamp:
+                type: string
+          status:
+            type: object
+            properties:
+              summary:
+                type: object
+                properties:
+                  totalNodes:
+                    type: integer
+                  activeNodes:
+                    type: integer
+                  totalWorkloads:
+                    type: integer
+                  cpuUtilization:
+                    type: string
+                  memoryUtilization:
+                    type: string
+                  cpuWaste:
+                    type: string
+                  memoryWaste:
+                    type: string
+              consolidation:
+                type: object
+                properties:
+                  feasible:
+                    type: boolean
+                  currentNodes:
+                    type: integer
+                  requiredNodes:
+                    type: integer
+                  nodeReduction:
+                    type: integer
+                  estimatedSavings:
+                    type: string
+              overProvisionedWorkloads:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    namespace:
+                      type: string
+                    cpuUsage:
+                      type: string
+                    cpuLimit:
+                      type: string
+                    memoryUsage:
+                      type: string
+                    memoryLimit:
+                      type: string
+                    recommendation:
+                      type: string
+              recommendations:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    priority:
+                      type: string
+                    message:
+                      type: string
+                    action:
+                      type: string
+  scope: Namespaced
+  names:
+    plural: optimizationreports
+    singular: optimizationreport
+    kind: OptimizationReport
+    shortNames:
+    - optreport

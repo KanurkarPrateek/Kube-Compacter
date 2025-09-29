@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: resource-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: overprovisioned-app
+  namespace: resource-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: overprovisioned
+  template:
+    metadata:
+      labels:
+        app: overprovisioned
+    spec:
+      containers:
+      - name: app
+        image: nginx:alpine
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: optimized-app
+  namespace: resource-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: optimized
+  template:
+    metadata:
+      labels:
+        app: optimized
+    spec:
+      containers:
+      - name: app
+        image: nginx:alpine
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memory-intensive-app
+  namespace: resource-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memory-intensive
+  template:
+    metadata:
+      labels:
+        app: memory-intensive
+    spec:
+      containers:
+      - name: app
+        image: redis:alpine
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "1Gi"
+          limits:
+            cpu: "500m"
+            memory: "4Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-intensive-app
+  namespace: resource-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cpu-intensive
+  template:
+    metadata:
+      labels:
+        app: cpu-intensive
+    spec:
+      containers:
+      - name: app
+        image: nginx:alpine
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do echo 'Processing...'; sleep 5; done"]
+        resources:
+          requests:
+            cpu: "1000m"
+            memory: "256Mi"
+          limits:
+            cpu: "4000m"
+            memory: "512Mi"

@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: node-optimizer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-optimizer-controller
+  namespace: node-optimizer
+  labels:
+    app: node-optimizer
+    component: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: node-optimizer
+      component: controller
+  template:
+    metadata:
+      labels:
+        app: node-optimizer
+        component: controller
+    spec:
+      serviceAccountName: node-optimizer
+      containers:
+      - name: controller
+        image: node-optimizer:latest
+        imagePullPolicy: Always
+        env:
+        - name: CONTROLLER_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: LOG_LEVEL
+          value: "info"
+        - name: NODE_ENV
+          value: "production"
+        command:
+        - node
+        - /app/k8s-controller/src/controller.js
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-optimizer
+  namespace: node-optimizer
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-optimizer
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "nodes/metrics", "pods", "namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["delete", "create", "patch", "update"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "daemonsets", "replicasets", "statefulsets"]
+  verbs: ["get", "list", "watch", "patch", "update"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["nodes", "pods"]
+  verbs: ["get", "list"]
+- apiGroups: ["optimizer.io"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-optimizer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: node-optimizer
+subjects:
+- kind: ServiceAccount
+  name: node-optimizer
+  namespace: node-optimizer

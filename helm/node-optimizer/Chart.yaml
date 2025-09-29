@@ -1,0 +1,25 @@
+apiVersion: v2
+name: node-optimizer
+description: Kubernetes Node Resource Optimizer - Intelligent workload placement and consolidation
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - cost-optimization
+  - resource-management
+  - finops
+  - bin-packing
+  - consolidation
+home: https://github.com/yourusername/node-optimizer
+sources:
+  - https://github.com/yourusername/node-optimizer
+maintainers:
+  - name: FinOps Team
+    email: finops@example.com
+icon: https://example.com/icon.png
+annotations:
+  artifacthub.io/category: monitoring-logging
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+  artifacthub.io/operatorCapabilities: Full Lifecycle
+  artifacthub.io/prerelease: "false"

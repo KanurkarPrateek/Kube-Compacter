@@ -1,0 +1,35 @@
+apiVersion: optimizer.io/v1alpha1
+kind: OptimizationConfig
+metadata:
+  name: {{ include "node-optimizer.fullname" . }}-default
+  labels:
+    {{- include "node-optimizer.labels" . | nindent 4 }}
+spec:
+  mode: {{ .Values.controller.defaultConfig.mode }}
+  safetyThreshold: {{ .Values.controller.defaultConfig.safetyThreshold }}
+  {{- with .Values.controller.defaultConfig.targetNamespaces }}
+  targetNamespaces:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  excludeNamespaces:
+    {{- toYaml .Values.controller.defaultConfig.excludeNamespaces | nindent 4 }}
+  schedule: {{ .Values.controller.defaultConfig.schedule | quote }}
+  binPackingStrategy: {{ .Values.controller.defaultConfig.binPackingStrategy }}
+  consolidationEnabled: {{ .Values.controller.defaultConfig.consolidationEnabled }}
+  rightSizingEnabled: {{ .Values.controller.defaultConfig.rightSizingEnabled }}
+  {{- with .Values.controller.defaultConfig.safeWindows }}
+  safeWindows:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if or .Values.notifications.slack.enabled .Values.notifications.email.enabled }}
+  notifications:
+    {{- if .Values.notifications.slack.enabled }}
+    slack:
+      webhook: {{ .Values.notifications.slack.webhook }}
+      channel: {{ .Values.notifications.slack.channel }}
+    {{- end }}
+    {{- if .Values.notifications.email.enabled }}
+    email:
+      {{- toYaml .Values.notifications.email.recipients | nindent 6 }}
+    {{- end }}
+  {{- end }}
