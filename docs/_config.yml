@@ -1,0 +1,25 @@
+theme: jekyll-theme-cayman
+title: Kube-Compactor
+description: Intelligent Kubernetes Workload Consolidation
+google_analytics:
+show_downloads: true
+github:
+  repository_url: https://github.com/KanurkarPrateek/Kube-Compacter
+  zip_url: https://github.com/KanurkarPrateek/Kube-Compacter/archive/main.zip
+  tar_url: https://github.com/KanurkarPrateek/Kube-Compacter/archive/main.tar.gz
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+navigation:
+  - title: Home
+    url: /
+  - title: Getting Started
+    url: /getting-started/introduction
+  - title: Documentation
+    url: /concepts/overview
+  - title: API Reference
+    url: /api/reference
+  - title: GitHub
+    url: https://github.com/KanurkarPrateek/Kube-Compacter
