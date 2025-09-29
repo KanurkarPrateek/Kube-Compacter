@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - Kube-Compactor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #764ba2;
+            margin-bottom: 1rem;
+        }
+        .nav {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+        .content {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #764ba2;
+            margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        h3 {
+            color: #667eea;
+            margin: 1.5rem 0 1rem 0;
+        }
+        pre {
+            background: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+        ul, ol {
+            margin: 1rem 0 1rem 2rem;
+        }
+        li {
+            margin: 0.5rem 0;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 3px solid #667eea;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Quick Start Guide</h1>
+            <p>Get Kube-Compactor up and running in your Kubernetes cluster in 5 minutes</p>
+            <div class="nav">
+                <a href="index.html">← Home</a>
+                <a href="#helm">Helm Install</a>
+                <a href="#kubectl">Kubectl Install</a>
+                <a href="#verify">Verify</a>
+                <a href="#first-analysis">First Analysis</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2 id="prerequisites">Prerequisites</h2>
+            <ul>
+                <li>Kubernetes cluster (1.19+)</li>
+                <li>kubectl configured to access your cluster</li>
+                <li>Helm 3 (optional, but recommended)</li>
+                <li>Cluster admin permissions</li>
+            </ul>
+
+            <div class="alert info">
+                <strong>Note:</strong> Kube-Compactor requires read access to nodes and pods, and write access for pod evictions (in auto modes).
+            </div>
+
+            <h2 id="helm">Option 1: Install with Helm (Recommended)</h2>
+
+            <div class="step">
+                <h3>Step 1: Add the Helm repository</h3>
+                <pre><code>helm repo add kube-compactor https://kanurkarprateek.github.io/Kube-Compacter/charts
+helm repo update</code></pre>
+            </div>
+
+            <div class="step">
+                <h3>Step 2: Install Kube-Compactor</h3>
+                <pre><code># Install in observe-only mode (safest for getting started)
+helm install kube-compactor kube-compactor/kube-compactor \
+  --namespace kube-compactor \
+  --create-namespace \
+  --set mode=observe</code></pre>
+            </div>
+
+            <div class="step">
+                <h3>Step 3: Check installation</h3>
+                <pre><code>kubectl get pods -n kube-compactor
+kubectl get optimizationconfig -n kube-compactor</code></pre>
+            </div>
+
+            <h2 id="kubectl">Option 2: Install with kubectl</h2>
+
+            <div class="step">
+                <h3>Step 1: Apply CRDs</h3>
+                <pre><code>kubectl apply -f https://raw.githubusercontent.com/KanurkarPrateek/Kube-Compacter/main/k8s-controller/crds/optimizer-crds.yaml</code></pre>
+            </div>
+
+            <div class="step">
+                <h3>Step 2: Deploy the controller</h3>
+                <pre><code>kubectl apply -f https://raw.githubusercontent.com/KanurkarPrateek/Kube-Compacter/main/k8s-controller/deploy/controller.yaml</code></pre>
+            </div>
+
+            <div class="step">
+                <h3>Step 3: Create optimization config</h3>
+                <pre><code>cat <<EOF | kubectl apply -f -
+apiVersion: optimizer.io/v1
+kind: OptimizationConfig
+metadata:
+  name: default-config
+  namespace: kube-compactor
+spec:
+  mode: observe
+  strategy: best-fit-decreasing
+  consolidationThreshold: 0.7
+  safetyMargin: 0.15
+  analysisInterval: 300
+  constraints:
+    minNodes: 2
+    maxMigrationsPerRun: 5
+    respectPodDisruptionBudgets: true
+EOF</code></pre>
+            </div>
+
+            <h2 id="verify">Verify Installation</h2>
+
+            <pre><code># Check controller is running
+kubectl get pods -n kube-compactor
+
+# Check CRDs are installed
+kubectl get crd | grep optimizer.io
+
+# Check optimization config
+kubectl describe optimizationconfig default-config -n kube-compactor
+
+# View controller logs
+kubectl logs -n kube-compactor deployment/kube-compactor-controller</code></pre>
+
+            <div class="alert success">
+                <strong>Expected output:</strong> You should see the controller pod running and generating optimization reports every 5 minutes.
+            </div>
+
+            <h2 id="first-analysis">Your First Analysis</h2>
+
+            <div class="step">
+                <h3>Step 1: Wait for first analysis</h3>
+                <p>The controller analyzes your cluster every 5 minutes. Wait for the first report:</p>
+                <pre><code>kubectl get optimizationreport -n kube-compactor -w</code></pre>
+            </div>
+
+            <div class="step">
+                <h3>Step 2: View optimization report</h3>
+                <pre><code># Get latest report
+REPORT=$(kubectl get optimizationreport -n kube-compactor --sort-by=.metadata.creationTimestamp -o name | tail -1)
+
+# View the report
+kubectl describe $REPORT -n kube-compactor</code></pre>
+            </div>
+
+            <div class="step">
+                <h3>Step 3: Check for migration plans</h3>
+                <pre><code># List any migration plans created
+kubectl get migrationplan -n kube-compactor
+
+# If plans exist, view details
+kubectl describe migrationplan -n kube-compactor</code></pre>
+            </div>
+
+            <h2>Understanding the Output</h2>
+
+            <h3>Optimization Report Fields</h3>
+            <ul>
+                <li><strong>Current Utilization:</strong> Shows CPU and memory usage across your cluster</li>
+                <li><strong>Optimization Potential:</strong> Estimated savings if consolidation is performed</li>
+                <li><strong>Recommended Migrations:</strong> Specific workloads that can be moved</li>
+                <li><strong>Safety Score:</strong> Confidence level in the recommendation (0-100)</li>
+            </ul>
+
+            <h3>Migration Plan Status</h3>
+            <ul>
+                <li><code>pending</code> - Waiting for approval or scheduled window</li>
+                <li><code>approved</code> - Ready to execute (manual mode)</li>
+                <li><code>executing</code> - Migration in progress</li>
+                <li><code>completed</code> - Successfully migrated</li>
+                <li><code>failed</code> - Migration failed (check events for details)</li>
+            </ul>
+
+            <h2>Next Steps</h2>
+
+            <h3>1. Enable Manual Migration Mode</h3>
+            <p>Once comfortable with the recommendations:</p>
+            <pre><code>kubectl patch optimizationconfig default-config -n kube-compactor \
+  --type merge -p '{"spec":{"mode":"manual"}}'</code></pre>
+
+            <h3>2. Approve a Migration</h3>
+            <pre><code># Get migration plan name
+PLAN=$(kubectl get migrationplan -n kube-compactor -o name | head -1)
+
+# Review the plan
+kubectl describe $PLAN -n kube-compactor
+
+# Approve if satisfied
+kubectl patch $PLAN -n kube-compactor \
+  --type merge -p '{"spec":{"approved":true}}'</code></pre>
+
+            <h3>3. Monitor Progress</h3>
+            <pre><code># Watch migration progress
+kubectl get events -n kube-compactor --sort-by='.lastTimestamp'
+
+# Check controller logs
+kubectl logs -f deployment/kube-compactor-controller -n kube-compactor</code></pre>
+
+            <h2>Configuration Options</h2>
+
+            <h3>Modes of Operation</h3>
+            <pre><code># Observe only - no actions taken
+mode: observe
+
+# Manual approval required
+mode: manual
+
+# Auto-approve low-risk migrations
+mode: semi-auto
+
+# Fully automated (use with caution)
+mode: full-auto</code></pre>
+
+            <h3>Optimization Strategies</h3>
+            <pre><code># First Fit - fastest, good for homogeneous workloads
+strategy: first-fit-decreasing
+
+# Best Fit - optimal packing, recommended
+strategy: best-fit-decreasing
+
+# Network Aware - considers network traffic
+strategy: network-aware
+
+# Affinity Based - respects pod affinity rules
+strategy: affinity-based</code></pre>
+
+            <h2>Troubleshooting</h2>
+
+            <h3>Controller not starting?</h3>
+            <pre><code># Check RBAC permissions
+kubectl auth can-i get nodes --as=system:serviceaccount:kube-compactor:kube-compactor-controller
+
+# Check for errors
+kubectl describe pod -n kube-compactor
+kubectl logs -n kube-compactor deployment/kube-compactor-controller --previous</code></pre>
+
+            <h3>No optimization reports generated?</h3>
+            <ul>
+                <li>Ensure Metrics Server is installed: <code>kubectl top nodes</code></li>
+                <li>Check controller has access to metrics: <code>kubectl top pods -A</code></li>
+                <li>Verify optimization config exists: <code>kubectl get optimizationconfig -A</code></li>
+            </ul>
+
+            <h3>Migrations failing?</h3>
+            <ul>
+                <li>Check PodDisruptionBudgets: <code>kubectl get pdb -A</code></li>
+                <li>Verify node capacity: <code>kubectl describe nodes</code></li>
+                <li>Review events: <code>kubectl get events -n kube-compactor</code></li>
+            </ul>
+
+            <div class="alert">
+                <strong>Need help?</strong> Check our <a href="https://github.com/KanurkarPrateek/Kube-Compacter/issues">GitHub Issues</a> or create a new one with your question.
+            </div>
+        </div>
+    </div>
+</body>
+</html>
