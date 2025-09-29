@@ -54,7 +54,7 @@ spec:
       serviceAccountName: node-optimizer
       containers:
       - name: controller
-        image: node-optimizer:latest
+        image: kanurkarprateek/kube-compactor:latest
         env:
         - name: MODE
           value: "observe"  # Safe default
